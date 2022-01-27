@@ -5,8 +5,3 @@
 
 **Description**:  
 Uploads archive with Metadata package/s to S3
-
-**Inputs**:
-* A
-* B
-* C

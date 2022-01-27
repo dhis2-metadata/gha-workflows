@@ -1,10 +1,20 @@
 name: 'Publish package'
 
 on:
-  push:
-    tags:
-
-  workflow_dispatch:
+  workflow_call:
+    secrets:
+      BOT_ACCESS_KEY:
+        required: true
+        description: 'AWS Access Key Id'
+      BOT_SECRET_KEY:
+        required: true
+        description: 'AWS Secret Access Key'
+      S3_BUCKET:
+        required: true
+        description: 'AWS S3 Bucket to upload to'
+      AWS_REGION:
+        required: true
+        description: 'AWS Region the S3 Bucket is located in'
 
 jobs:
   test:
