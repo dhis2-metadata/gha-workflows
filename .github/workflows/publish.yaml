@@ -1,0 +1,44 @@
+name: 'Publish package'
+
+on:
+  push:
+    tags:
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: 'Checkout feature branch'
+        uses: actions/checkout@v2
+        with:
+          path: 'feature'
+
+      - name: 'Move packages to archive dir'
+        id: move_packages
+        uses: dhis2-metadata/prepare@v2
+
+      - name: 'Checkout master branch'
+        uses: actions/checkout@v2
+        with:
+          ref: 'master'
+          path: 'master'
+
+      - name: 'Move installation guide to archive dir'
+        run: cp docs/installation.md ${{ steps.move_packages.outputs.archive_dir }}
+
+      - name: 'Archive packages'
+        run: zip -r "${{ steps.move_packages.outputs.archive_dir }}.zip" ${{ steps.move_packages.outputs.archive_dir }}
+
+      - name: 'Upload package'
+        uses: prewk/s3-cp-action@master
+        with:
+          args: --acl public-read
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BOT_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BOT_SECRET_KEY }}
+          AWS_S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          SOURCE: "${{ steps.move_packages.outputs.archive_dir }}.zip"
+          DEST: "s3://${{ secrets.S3_BUCKET }}/${{ steps.move_packages.outputs.destination }}"
