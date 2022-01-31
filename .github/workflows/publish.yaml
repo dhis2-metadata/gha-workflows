@@ -27,7 +27,7 @@ jobs:
 
       - name: 'Move packages to archive dir'
         id: move_packages
-        uses: dhis2-metadata/prepare@v2
+        uses: dhis2-metadata/prepare@DEVOPS-124
 
       - name: 'Checkout master branch'
         uses: actions/checkout@v2
