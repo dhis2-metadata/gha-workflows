@@ -38,13 +38,11 @@ jobs:
           path: 'master'
 
       - name: 'Move installation guide to archive dir'
-        run: |
-          sudo cp docs/installation.md ${{ steps.move_packages.outputs.archive_dir }}
-          ls -la ${{ steps.move_packages.outputs.archive_dir }}
+        run: sudo cp docs/installation.md "../${{ steps.move_packages.outputs.archive_dir }}"
         working-directory: 'master'
 
       - name: 'Archive packages'
-        run: sudo zip -r "${{ steps.move_packages.outputs.archive_dir }}.zip" "${{ steps.move_packages.outputs.archive_dir }}"
+        run: zip -r "${{ steps.move_packages.outputs.archive_dir }}.zip" ${{ steps.move_packages.outputs.archive_dir }}
 
       - name: 'Upload package'
         uses: prewk/s3-cp-action@v2
