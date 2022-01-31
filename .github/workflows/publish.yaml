@@ -38,7 +38,10 @@ jobs:
           path: 'master'
 
       - name: 'Move installation guide to archive dir'
-        run: cp docs/installation.md ${{ steps.move_packages.outputs.archive_dir }}
+        run: |
+          ls -la ..
+          ls -laR
+          sudo cp docs/installation.md ${{ steps.move_packages.outputs.archive_dir }}
         working-directory: 'master'
 
       - name: 'Archive packages'
