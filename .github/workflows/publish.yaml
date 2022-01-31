@@ -28,6 +28,8 @@ jobs:
       - name: 'Move packages to archive dir'
         id: move_packages
         uses: dhis2-metadata/prepare@DEVOPS-124
+        with:
+          working_dir: 'feature'
 
       - name: 'Checkout master branch'
         uses: actions/checkout@v2
@@ -37,6 +39,7 @@ jobs:
 
       - name: 'Move installation guide to archive dir'
         run: cp docs/installation.md ${{ steps.move_packages.outputs.archive_dir }}
+        working-directory: 'master'
 
       - name: 'Archive packages'
         run: zip -r "${{ steps.move_packages.outputs.archive_dir }}.zip" ${{ steps.move_packages.outputs.archive_dir }}
