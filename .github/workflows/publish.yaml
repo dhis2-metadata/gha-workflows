@@ -51,5 +51,5 @@ jobs:
           aws_secret_access_key: ${{ secrets.BOT_SECRET_KEY }}
           aws_region: ${{ secrets.AWS_REGION }}
           source: "${{ steps.move_packages.outputs.archive_dir }}.zip"
-          dest: "s3://${{ secrets.S3_BUCKET }}/${{ steps.move_packages.outputs.destination }}"
+          dest: "s3://${{ secrets.S3_BUCKET }}/${{ steps.move_packages.outputs.destination }}/${{ steps.move_packages.outputs.archive_dir }}.zip"
           flags: --acl public-read
