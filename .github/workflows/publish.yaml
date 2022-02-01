@@ -17,7 +17,7 @@ on:
         description: 'AWS Region the S3 Bucket is located in'
 
 jobs:
-  test:
+  publish:
     runs-on: ubuntu-20.04
     steps:
       - name: 'Checkout feature branch'
@@ -25,7 +25,7 @@ jobs:
         with:
           path: 'feature'
 
-      - name: 'Move packages to archive dir'
+      - name: 'Prepare packages for archiving'
         id: move_packages
         uses: dhis2-metadata/prepare@DEVOPS-124
         with:
@@ -44,7 +44,7 @@ jobs:
       - name: 'Archive packages'
         run: zip -r "${{ steps.move_packages.outputs.archive_dir }}.zip" ${{ steps.move_packages.outputs.archive_dir }}
 
-      - name: 'Upload package'
+      - name: 'Upload packages archive'
         uses: prewk/s3-cp-action@v2
         with:
           aws_access_key_id: ${{ secrets.BOT_ACCESS_KEY }}
