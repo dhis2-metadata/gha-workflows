@@ -25,11 +25,22 @@ jobs:
         with:
           path: 'feature'
 
+      - name: 'Get Package and DHIS2 versions from tag'
+        id: get_versions
+        run: |
+          NUMERIC_TAG="${GITHUB_REF_NAME#D}"
+          PACKAGE_VERSION="${NUMERIC_TAG#*/}"
+          DHIS2_VERSION="${NUMERIC_TAG%/*}"
+
+          echo "::set-output name=package_version::$PACKAGE_VERSION"
+          echo "::set-output name=dhis2_version::$DHIS2_VERSION"
+
       - name: 'Prepare packages for archiving'
         id: move_packages
         uses: dhis2-metadata/prepare@DEVOPS-124
         with:
           working_dir: 'feature'
+          package_version: ${{ steps.get_versions.outputs.package_version }}
 
       - name: 'Checkout master branch'
         uses: actions/checkout@v2
@@ -44,15 +55,6 @@ jobs:
       - name: 'Archive packages'
         run: zip -r "${{ steps.move_packages.outputs.archive_dir }}.zip" ${{ steps.move_packages.outputs.archive_dir }}
 
-      - name: 'Create S3 path prefix'
-        id: create_prefix
-        run: |
-          NUMERIC_TAG="${GITHUB_REF_NAME#D}"
-          PACKAGE_VERSION="${NUMERIC_TAG#*/}"
-          DHIS2_VERSION="${NUMERIC_TAG%/*}"
-          PATH_PREFIX="${{ steps.move_packages.outputs.package_locale }}/${{ steps.move_packages.outputs.package_prefix }}/${PACKAGE_VERSION}/DHIS${DHIS2_VERSION}"
-          echo "::set-output name=path_prefix::$PATH_PREFIX"
-
       - name: 'Upload packages archive'
         uses: prewk/s3-cp-action@v2
         with:
@@ -60,5 +62,5 @@ jobs:
           aws_secret_access_key: ${{ secrets.BOT_SECRET_KEY }}
           aws_region: ${{ secrets.AWS_REGION }}
           source: "${{ steps.move_packages.outputs.archive_dir }}.zip"
-          dest: "s3://${{ secrets.S3_BUCKET }}/${{ steps.create_prefix.outputs.path_prefix }}/${{ steps.move_packages.outputs.archive_dir }}.zip"
+          dest: "s3://${{ secrets.S3_BUCKET }}/${{ steps.move_packages.outputs.package_locale }}/${{ steps.move_packages.outputs.package_prefix }}/${{ steps.get_versions.outputs.package_version }}/${{ steps.get_versions.outputs.dhis2_version }}/${{ steps.move_packages.outputs.archive_dir }}.zip"
           flags: --acl public-read
