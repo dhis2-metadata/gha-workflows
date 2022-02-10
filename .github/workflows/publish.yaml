@@ -28,9 +28,9 @@ jobs:
       - name: 'Get Package and DHIS2 versions from tag'
         id: get_versions
         run: |
-          NUMERIC_TAG="${GITHUB_REF_NAME#D}"
-          PACKAGE_VERSION="${NUMERIC_TAG#*/}"
-          DHIS2_VERSION="${NUMERIC_TAG%/*}"
+          VERSIONS="${GITHUB_REF_NAME#D}"
+          PACKAGE_VERSION="${VERSIONS#*/}"
+          DHIS2_VERSION="${VERSIONS%/*}"
 
           echo "::set-output name=package_version::$PACKAGE_VERSION"
           echo "::set-output name=dhis2_version::$DHIS2_VERSION"
