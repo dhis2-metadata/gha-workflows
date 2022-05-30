@@ -63,4 +63,3 @@ jobs:
           aws_region: ${{ secrets.AWS_REGION }}
           source: "${{ steps.move_packages.outputs.archive_dir }}.zip"
           dest: "s3://${{ secrets.S3_BUCKET }}/${{ steps.move_packages.outputs.package_locale }}/${{ steps.move_packages.outputs.package_code }}/${{ steps.get_versions.outputs.package_version }}/DHIS${{ steps.get_versions.outputs.dhis2_version }}/${{ steps.move_packages.outputs.archive_dir }}.zip"
-          #flags: --acl public-read
