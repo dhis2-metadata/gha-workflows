@@ -48,9 +48,14 @@ jobs:
           ref: 'master'
           path: 'master'
 
+      - uses: baileyjm02/markdown-to-pdf@v1
+        with:
+          input_dir: master/docs
+          output_dir: master/docs/pdfs
+
       - name: 'Move installation guide to archive dir'
-        run: sudo cp docs/*installation.md "../${{ steps.move_packages.outputs.archive_dir }}"
         working-directory: 'master'
+        run: sudo cp docs/pdfs/*installation.pdf "../${{ steps.move_packages.outputs.archive_dir }}"
 
       - name: 'Archive packages'
         run: sudo zip -r "${{ steps.move_packages.outputs.archive_dir }}.zip" ${{ steps.move_packages.outputs.archive_dir }}
