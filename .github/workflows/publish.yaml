@@ -48,10 +48,12 @@ jobs:
           ref: 'master'
           path: 'master'
 
-      - uses: baileyjm02/markdown-to-pdf@v1
+      - name: 'Convert installation guide to PDF'
+        uses: baileyjm02/markdown-to-pdf@v1
         with:
           input_dir: master/docs
           output_dir: master/docs/pdfs
+          build_html: false
 
       - name: 'Move installation guide to archive dir'
         working-directory: 'master'
