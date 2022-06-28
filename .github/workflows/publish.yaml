@@ -51,7 +51,7 @@ jobs:
       - name: 'Convert installation guide to PDF'
         uses: baileyjm02/markdown-to-pdf@v1
         with:
-          input_dir: master/docs
+          input_path: master/docs/*installation.md
           output_dir: master/docs/pdfs
           build_html: false
 
