@@ -37,7 +37,7 @@ jobs:
 
       - name: 'Prepare packages for archiving'
         id: move_packages
-        uses: dhis2-metadata/prepare@DEVOPS-124
+        uses: dhis2-metadata/prepare@v1
         with:
           working_dir: 'feature'
           package_version: ${{ steps.get_versions.outputs.package_version }}
@@ -48,12 +48,19 @@ jobs:
           ref: 'master'
           path: 'master'
 
+      - name: 'Convert installation guide to PDF'
+        uses: baileyjm02/markdown-to-pdf@v1
+        with:
+          input_path: master/docs/*installation.md
+          output_dir: master/docs/pdfs
+          build_html: false
+
       - name: 'Move installation guide to archive dir'
-        run: sudo cp docs/installation.md "../${{ steps.move_packages.outputs.archive_dir }}"
         working-directory: 'master'
+        run: sudo cp docs/pdfs/*installation.pdf "../${{ steps.move_packages.outputs.archive_dir }}"
 
       - name: 'Archive packages'
-        run: zip -r "${{ steps.move_packages.outputs.archive_dir }}.zip" ${{ steps.move_packages.outputs.archive_dir }}
+        run: sudo zip -r "${{ steps.move_packages.outputs.archive_dir }}.zip" ${{ steps.move_packages.outputs.archive_dir }}
 
       - name: 'Upload packages archive'
         uses: prewk/s3-cp-action@v2
@@ -62,5 +69,4 @@ jobs:
           aws_secret_access_key: ${{ secrets.BOT_SECRET_KEY }}
           aws_region: ${{ secrets.AWS_REGION }}
           source: "${{ steps.move_packages.outputs.archive_dir }}.zip"
-          dest: "s3://${{ secrets.S3_BUCKET }}/${{ steps.move_packages.outputs.package_locale }}/${{ steps.move_packages.outputs.package_prefix }}/${{ steps.get_versions.outputs.package_version }}/DHIS${{ steps.get_versions.outputs.dhis2_version }}/${{ steps.move_packages.outputs.archive_dir }}.zip"
-          flags: --acl public-read
+          dest: "s3://${{ secrets.S3_BUCKET }}/${{ steps.move_packages.outputs.package_locale }}/${{ steps.move_packages.outputs.package_code }}/${{ steps.get_versions.outputs.package_version }}/DHIS${{ steps.get_versions.outputs.dhis2_version }}/${{ steps.move_packages.outputs.archive_dir }}.zip"
