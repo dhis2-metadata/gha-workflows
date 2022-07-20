@@ -88,9 +88,10 @@ jobs:
         with:
           tag: ${{ github.ref_name }}
 
-      - name: 'Add release notes to description'
+      - name: 'Update Release description'
         uses: irongut/editrelease@v1.2.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           id: ${{ steps.find_release.outputs.id }}
+          body: "Package uploaded to https://${{ secrets.S3_BUCKET }}/${{ steps.move_packages.outputs.package_locale }}/${{ steps.move_packages.outputs.package_code }}/${{ steps.get_versions.outputs.package_version }}/DHIS${{ steps.get_versions.outputs.dhis2_version }}/${{ steps.move_packages.outputs.archive_dir }}.zip"
           files: "${{ steps.get_release_notes.outputs.release_notes }}"
