@@ -37,10 +37,31 @@ jobs:
 
       - name: 'Prepare packages for archiving'
         id: move_packages
-        uses: dhis2-metadata/prepare@v1
+        uses: dhis2-metadata/prepare@remove-reference-file-step
         with:
           working_dir: 'feature'
           package_version: ${{ steps.get_versions.outputs.package_version }}
+
+      - name: 'Generate package reference files'
+        run: |
+          npm install dev-otta/metadatareference
+
+          packages=($(find ${{ steps.move_packages.outputs.archive_dir }} -type f -name "*.json" | sort))
+
+          for package_path in "${packages[@]}"
+          do
+            cd $(dirname $package_path)
+
+            package_name=$(basename $package_path)
+
+            sudo node ../../node_modules/metadatareference/reference.js $package_name
+
+            if [[ $(basename $(dirname $package_path)) == "COMPLETE" ]]; then
+              cp "${package_name%.*}.xlsx" testfile.xlsx
+            fi
+
+            cd -
+          done
 
       - name: 'Checkout master branch'
         uses: actions/checkout@v2
