@@ -15,13 +15,19 @@ on:
       AWS_REGION:
         required: true
         description: 'AWS Region the S3 Bucket is located in'
+      BOT_GITHUB_PAT:
+        required: true
+        description: 'GitHub Personal Access Token for updating Packages Downloads index repo'
+      BOT_GITHUB_EMAIL:
+        required: true
+        description: 'GitHub Email for updating Packages Downloads index repo'
 
 jobs:
   publish:
     runs-on: ubuntu-20.04
     steps:
       - name: 'Checkout feature branch'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: 'feature'
 
@@ -32,8 +38,8 @@ jobs:
           PACKAGE_VERSION="${VERSIONS#*/}"
           DHIS2_VERSION="${VERSIONS%/*}"
 
-          echo "::set-output name=package_version::$PACKAGE_VERSION"
-          echo "::set-output name=dhis2_version::$DHIS2_VERSION"
+          echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+          echo "dhis2_version=$DHIS2_VERSION" >> $GITHUB_OUTPUT
 
       - name: 'Prepare packages for archiving'
         id: move_packages
@@ -41,6 +47,16 @@ jobs:
         with:
           working_dir: 'feature'
           package_version: ${{ steps.get_versions.outputs.package_version }}
+
+      - name: 'Generate S3 destination path'
+        id: generate_s3_destination
+        run: |
+          PACKAGE_S3_PREFIX="${{ steps.move_packages.outputs.package_locale }}\
+          /${{ steps.move_packages.outputs.package_code }}\
+          /${{ steps.get_versions.outputs.package_version }}\
+          /DHIS${{ steps.get_versions.outputs.dhis2_version }}"
+
+          echo "package_s3_prefix=$PACKAGE_S3_PREFIX" >> $GITHUB_OUTPUT
 
       - name: 'Generate package reference files'
         id: generate_reference_files
@@ -63,7 +79,7 @@ jobs:
           done
 
       - name: 'Checkout master branch'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: 'master'
           path: 'master'
@@ -95,10 +111,7 @@ jobs:
           aws_region: ${{ secrets.AWS_REGION }}
           source: "${{ steps.move_packages.outputs.archive_dir }}.zip"
           dest: "s3://${{ secrets.S3_BUCKET }}\
-            /${{ steps.move_packages.outputs.package_locale }}\
-            /${{ steps.move_packages.outputs.package_code }}\
-            /${{ steps.get_versions.outputs.package_version }}\
-            /DHIS${{ steps.get_versions.outputs.dhis2_version }}\
+            /${{ steps.generate_s3_destination.outputs.package_s3_prefix }}\
             /${{ steps.move_packages.outputs.archive_dir }}.zip"
 
       - name: 'Upload all reference files next to archive'
@@ -109,11 +122,55 @@ jobs:
           aws_region: ${{ secrets.AWS_REGION }}
           source: "reference-files/"
           dest: "s3://${{ secrets.S3_BUCKET }}\
-            /${{ steps.move_packages.outputs.package_locale }}\
-            /${{ steps.move_packages.outputs.package_code }}\
-            /${{ steps.get_versions.outputs.package_version }}\
-            /DHIS${{ steps.get_versions.outputs.dhis2_version }}/"
+            /${{ steps.generate_s3_destination.outputs.package_s3_prefix }}/"
           flags: --recursive
+
+      - name: 'Checkout Downloads index'
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.BOT_GITHUB_PAT }}
+          repository: 'dhis2-metadata/downloads-index'
+          path: 'downloads-index'
+
+      - name: 'Checkout Downloads index updater'
+        uses: actions/checkout@v3
+        with:
+          repository: 'dhis2-metadata/downloads-index-updater'
+          path: 'downloads-index-updater'
+
+      - name: 'Update downloads index.json'
+        run: |
+          echo Updating downloads index.json
+
+          cd downloads-index-updater
+
+          python3 update_index.py \
+            --package "$(jq -r '.package' < ../feature/COMPLETE/metadata.json)" \
+            --index-file ../downloads-index/index.json \
+            --release-date "$(date +'%Y-%m-%d')" \
+            --url "https://packages.dhis2.org/${{ steps.generate_s3_destination.outputs.package_s3_prefix }}/${{ steps.move_packages.outputs.archive_dir }}.zip" \
+            --reference-url "https://packages.dhis2.org/${{ steps.generate_s3_destination.outputs.package_s3_prefix }}/${{ steps.move_packages.outputs.package_code }}_COMPLETE_${{ steps.get_versions.outputs.package_version }}_DHIS${{ steps.get_versions.outputs.dhis2_version }}.xlsx"
+
+      - name: 'Push updated Packages Download index'
+        run: |
+          cd downloads-index
+
+          git config user.email ${{ secrets.BOT_GITHUB_EMAIL }}
+          git config user.name dhis2-bot
+
+          BRANCH_NAME="update-${{ steps.move_packages.outputs.package_code }}-${{ steps.get_versions.outputs.package_version }}"
+
+          git checkout -b $BRANCH_NAME
+
+          git add index.json
+
+          git diff-index --quiet HEAD || git commit -m "chore: update index with package ${{ steps.move_packages.outputs.package_code }}, version ${{ steps.get_versions.outputs.package_version }}"
+
+          git push origin $BRANCH_NAME
+
+          gh pr create --base master --head $BRANCH_NAME --fill --reviewer stratosilva,yuryrog
+        env:
+          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_PAT }}
 
       - name: 'Get Release notes'
         uses: yashanand1910/standard-release-notes@v1.2.1
@@ -136,9 +193,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           id: ${{ steps.find_release.outputs.id }}
           body: "Package uploaded to https://${{ secrets.S3_BUCKET }}\
-            /${{ steps.move_packages.outputs.package_locale }}\
-            /${{ steps.move_packages.outputs.package_code }}\
-            /${{ steps.get_versions.outputs.package_version }}\
-            /DHIS${{ steps.get_versions.outputs.dhis2_version }}\
+            /${{ steps.generate_s3_destination.outputs.package_s3_prefix }}\
             /${{ steps.move_packages.outputs.archive_dir }}.zip\n\n\
             ${{ steps.get_release_notes.outputs.release_notes }}"
