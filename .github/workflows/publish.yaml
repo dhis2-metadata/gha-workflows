@@ -148,8 +148,10 @@ jobs:
 
           VERSIONED_PACKAGE_FILE_PATH="${{ steps.move_packages.outputs.archive_dir }}/$VERSIONED_PACKAGE_FILE_NAME/$VERSIONED_PACKAGE_FILE_NAME.json"
 
+          la -la ../$VERSIONED_PACKAGE_FILE_PATH
+
           python3 update_index.py \
-            --package "$(jq -r '.package' < ../$VERSIONED_PACKAGE_FILE_PATH)" \
+            --package "$(sudo jq -r '.package' < ../$VERSIONED_PACKAGE_FILE_PATH)" \
             --index-file ../downloads-index/index.json \
             --release-date "$(date +'%Y-%m-%d')" \
             --url "https://packages.dhis2.org/${{ steps.generate_s3_destination.outputs.package_s3_prefix }}/${{ steps.move_packages.outputs.archive_dir }}.zip" \
