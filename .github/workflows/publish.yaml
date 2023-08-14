@@ -155,7 +155,7 @@ jobs:
             --index-file ../downloads-index/index.json \
             --release-date "$(date +'%Y-%m-%d')" \
             --url "https://packages.dhis2.org/${{ steps.generate_s3_destination.outputs.package_s3_prefix }}/${{ steps.move_packages.outputs.archive_dir }}.zip" \
-            --reference-url "https://packages.dhis2.org/${{ steps.generate_s3_destination.outputs.package_s3_prefix }}/VERSIONED_PACKAGE_FILE_NAME.xlsx"
+            --reference-url "https://packages.dhis2.org/${{ steps.generate_s3_destination.outputs.package_s3_prefix }}/$VERSIONED_PACKAGE_FILE_NAME.xlsx"
 
       - name: 'Push updated Packages Download index'
         run: |
