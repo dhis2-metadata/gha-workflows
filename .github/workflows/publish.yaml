@@ -148,7 +148,7 @@ jobs:
 
           VERSIONED_PACKAGE_FILE_PATH="${{ steps.move_packages.outputs.archive_dir }}/$VERSIONED_PACKAGE_FILE_NAME/$VERSIONED_PACKAGE_FILE_NAME.json"
 
-          la -la ../$VERSIONED_PACKAGE_FILE_PATH
+          ls -la ../$VERSIONED_PACKAGE_FILE_PATH
 
           python3 update_index.py \
             --package "$(sudo jq -r '.package' < ../$VERSIONED_PACKAGE_FILE_PATH)" \
