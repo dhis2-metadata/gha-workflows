@@ -170,11 +170,11 @@ jobs:
 
           git add index.json
 
-          git diff-index --quiet HEAD || git commit -m "chore: update index with ${{ steps.move_packages.outputs.package_base_code }} v${{ steps.get_versions.outputs.package_version }}, DHIS2 v${{ steps.get_versions.outputs.dhis2_version }}"
-
-          git push origin $BRANCH_NAME
-
-          gh pr create --base master --head $BRANCH_NAME --fill --reviewer stratosilva,yuryrog
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git commit -m "chore: update index with ${{ steps.move_packages.outputs.package_base_code }} v${{ steps.get_versions.outputs.package_version }}, DHIS2 v${{ steps.get_versions.outputs.dhis2_version }}"
+            git push origin $BRANCH_NAME
+            gh pr create --base master --head $BRANCH_NAME --fill --reviewer stratosilva,yuryrog
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_PAT }}
 
