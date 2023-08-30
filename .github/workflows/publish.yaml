@@ -52,7 +52,7 @@ jobs:
         id: generate_s3_destination
         run: |
           PACKAGE_S3_PREFIX="${{ steps.move_packages.outputs.package_locale }}\
-          /${{ steps.move_packages.outputs.package_code }}\
+          /${{ steps.move_packages.outputs.package_base_code }}\
           /${{ steps.get_versions.outputs.package_version }}\
           /DHIS${{ steps.get_versions.outputs.dhis2_version }}"
 
@@ -144,7 +144,7 @@ jobs:
 
           cd downloads-index-updater
 
-          VERSIONED_PACKAGE_FILE_NAME="${{ steps.move_packages.outputs.package_code }}_COMPLETE_${{ steps.get_versions.outputs.package_version }}_DHIS${{ steps.get_versions.outputs.dhis2_version }}"
+          VERSIONED_PACKAGE_FILE_NAME="${{ steps.move_packages.outputs.package_code }}_${{ steps.get_versions.outputs.package_version }}_DHIS${{ steps.get_versions.outputs.dhis2_version }}"
 
           VERSIONED_PACKAGE_FILE_PATH="${{ steps.move_packages.outputs.archive_dir }}/$VERSIONED_PACKAGE_FILE_NAME/$VERSIONED_PACKAGE_FILE_NAME.json"
 
@@ -164,13 +164,13 @@ jobs:
           git config user.email ${{ secrets.BOT_GITHUB_EMAIL }}
           git config user.name dhis2-bot
 
-          BRANCH_NAME="update-${{ steps.move_packages.outputs.package_code }}-${{ steps.get_versions.outputs.package_version }}-${{ steps.get_versions.outputs.dhis2_version }}"
+          BRANCH_NAME="update-${{ steps.move_packages.outputs.package_base_code }}-${{ steps.get_versions.outputs.package_version }}-${{ steps.get_versions.outputs.dhis2_version }}"
 
           git checkout -b $BRANCH_NAME
 
           git add index.json
 
-          git diff-index --quiet HEAD || git commit -m "chore: update index with ${{ steps.move_packages.outputs.package_code }} v${{ steps.get_versions.outputs.package_version }}, DHIS2 v${{ steps.get_versions.outputs.dhis2_version }}"
+          git diff-index --quiet HEAD || git commit -m "chore: update index with ${{ steps.move_packages.outputs.package_base_code }} v${{ steps.get_versions.outputs.package_version }}, DHIS2 v${{ steps.get_versions.outputs.dhis2_version }}"
 
           git push origin $BRANCH_NAME
 
